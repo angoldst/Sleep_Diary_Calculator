@@ -1,0 +1,167 @@
+---
+title: "Sleep Diary Report"
+output:
+  html_document:
+    toc: true
+    toc_floating: true
+    theme: united
+    toc_depth: 4
+
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+```
+
+```{r, message= F, warning = F, include = F}
+library(plyr)
+library(dplyr)
+library(tidyr)
+library(magrittr)
+library(purrr)
+library(forcats)
+library(ggplot2)
+library(reshape2)
+library(fs)
+library(lubridate)
+library(stringr)
+library(kableExtra)
+library(knitr)
+library(pander)
+```
+
+```{r}
+source(path(here::here('study_config.R')))
+source(path(here::here('R', 'check_date_sequence.R')))
+source(path(here::here('R', 'create_section.R')))
+```
+
+
+```{r, include = F}
+diary <- read.csv(path(path_to_data, diary_name), header = TRUE, sep = ",", na.strings = c("", "NA","."," ", "   ", "99"), stringsAsFactors = F)
+diary %<>% filter(record_id == subject)
+
+```
+
+```{r, include = F}
+####convert dates and create new columns
+diary$date_as_date <- as.POSIXct(diary$sd_date, format="%Y-%m-%d", tz = 'UTC')
+diary$in_bed <- as.POSIXct(paste(diary$sd_date, diary$sd_2), format="%Y-%m-%d %H:%M", tz='UTC')
+diary$try_sleep <- as.POSIXct(paste(diary$sd_date, diary$sd_3b), format="%Y-%m-%d %H:%M", tz='UTC')
+diary$next_day <- as.POSIXct(diary$sd_date, format='%Y-%m-%d') + days(1)
+diary$midnight <- as.POSIXct(paste(diary$sd_date,'23:59'), format="%Y-%m-%d %H:%M")
+
+diary$in_bed2<- ifelse(as.numeric(difftime(diary$in_bed, diary$midnight, units=c('hours')))+24 <= 0, as.character(paste(diary$next_day, diary$sd_2), format="%Y-%m-%d %H:%M", tz='UTC'), as.character(paste(diary$sd_date, diary$sd_2)))
+diary$in_bed2 <- as.POSIXct(diary$in_bed2, format="%Y-%m-%d %H:%M", tz='UTC')
+
+diary$try_sleep2<- ifelse(as.numeric(difftime(diary$try_sleep, diary$midnight, unit= 'hours'))+24 <= 0, as.character(paste(diary$next_day, diary$sd_3b), format="%Y-%m-%d %H:%M", tz='UTC'), as.character(paste(diary$sd_date, diary$sd_3b)))
+diary$try_sleep2 <- as.POSIXct(diary$try_sleep2, format="%Y-%m-%d %H:%M", tz='UTC')
+
+diary$final_awake <- as.POSIXct(paste(diary$next_day, diary$sd_8), format="%Y-%m-%d %H:%M", tz='UTC')
+diary$out_bed <- as.POSIXct(paste(diary$next_day, diary$sd_9), format="%Y-%m-%d %H:%M", tz='UTC')
+
+#calculations
+  diary %<>%
+  mutate(TIB = difftime(out_bed, in_bed2, units=c('hours') ) %>% as.numeric ,
+         tst = difftime(final_awake, try_sleep2, units=c('mins')) %>% as.numeric,
+         TST = (tst - sd_4 - sd_6)/60,
+         SE = (TST/TIB) * 100, 
+         EMA = ifelse(is.na(sd_7b) & !is.na(sd_7a), 0, sd_7b),
+         SOL = sd_4,
+         WASO = sd_6,
+         Session = factor(redcap_event_name %>% str_remove('_arm_2'), ordered = T, levels = session_order),
+         Session_numeric = Session %>% as.character %>% str_replace('etx', '5') %>% str_replace('st', '6') %>% str_remove('t') %>% as.numeric) %>%
+    filter(!is.na(redcap_repeat_instrument)) 
+    
+  
+  daily_calcs <- diary %>%       
+    select(  record_id, Session, sd_date, TIB, TST, SE, date_as_date)
+
+averages <- diary %>%
+  group_by(Session) %>%
+  summarise(SE  = mean(SE, na.rm = T),
+            TST = mean(TST, na.rm = T),
+            TIB = mean(TIB, na.rm = T), 
+            EMA = mean(EMA, na.rm =T), 
+            SOL = mean(SOL, na.rm = T),
+            WASO = mean(WASO, na.rm = T)) %>%
+  mutate(sd_date = 'Average:', 
+         record_id = '', 
+          Session_numeric = Session %>% as.character %>% str_replace('etx', '5') %>% str_replace('st', '6') %>% str_remove('t') %>% as.numeric, 
+         date_as_date = NA,
+         )
+
+daily_calcs <- rbind(daily_calcs, averages %>% select(  record_id, Session, sd_date, TIB, TST, SE, date_as_date) )
+
+daily_calcs %<>%
+  mutate_if(is.numeric, function(x) round(x, 2))
+```
+
+
+```{r, echo=F, results = 'asis'}
+#loop across sessions
+
+for(session in session_order){
+      create_section(paste0('Sleep Diary for Calculation ', session, ':'))
+  
+        flagged_rows = check_date_sequence(daily_calcs %>% filter(Session == session))
+
+        if(length(flagged_rows > 0)){
+          cat('<br/><span style="color:red; font-size:18pt">WARNING: Dates were entered out of order or missing!</span><br/><br/>' )
+        }
+        
+        daily_calcs %>% 
+          select(-date_as_date) %>%
+          filter(Session == session) %>%
+          kable('html') %>%
+          kable_styling(bootstrap_options = 'striped', full_width = F, position = 'left') %>%
+          row_spec(dim(daily_calcs %>% filter(Session == session))[1], bold = T) %>%
+          row_spec(flagged_rows, color = 'red') %>%
+          htmltools::HTML() %>%
+          print
+        
+        cat('\n')
+        
+        averages %>% 
+          filter(Session == session) %>%
+          mutate_if(is.numeric, function(x) round(x, 2)) %>%
+          select(SOL, WASO, EMA) %>%
+          t  %>%
+          kable('html') %>%
+          kable_styling(bootstrap_options = 'striped', full_width = F, position = 'left') %>%
+          htmltools::HTML() %>%
+          print
+        
+       
+}
+```
+
+
+
+##Tradjectory Plots
+```{r, fig.height=3.5, fig.width = 10, echo = F, warning=F}
+melt(averages %>% select(-sd_date, -record_id, -SE, -TST, -TIB,-date_as_date), id.vars = c('Session_numeric', 'Session')) %>%
+  ggplot(aes(x = Session_numeric, y = value)) + 
+  facet_wrap(~variable) + 
+  geom_point( ) + 
+  geom_path() + 
+  scale_x_continuous(breaks = c(1:6), labels = c('T1', 'T2', 'T3', 'T4', 'ETX', '2MO'))
+
+
+melt(averages %>% select(-sd_date, -record_id, -EMA, -SOL, -WASO, -date_as_date), id.vars = c('Session', 'Session_numeric')) %>%
+  ggplot(aes(x = Session_numeric, y = value)) + 
+  facet_wrap(~variable, scales = 'free') + 
+  geom_point( ) + 
+  geom_path() + 
+  scale_x_continuous(breaks = c(1:6), labels = c('T1', 'T2', 'T3', 'T4', 'ETX', '2MO'))
+
+
+```
+
+```{r}
+print(system("git rev-parse HEAD", intern=TRUE))
+
+```
+
+
