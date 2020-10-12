@@ -8,3 +8,5 @@ To run:
 - Update `study_config.R` diary name
 - Update `study_config.R` file to include the subjec ID that you are interested in (should be in the format of `COVIDXXX`)
 - Generate the report by running: `source('./run_report.R')
+
+The report will be stored in the subject folder as an html file with the current date.
