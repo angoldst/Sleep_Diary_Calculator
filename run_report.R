@@ -1,6 +1,7 @@
+library(fs)
 source('study_config.R')
 
-if(!file.exists(path(path_to_data, subject)){
+if(!file.exists(path(path_to_data, subject))){
   dir.create(path(path_to_data, subject))
 }
 
