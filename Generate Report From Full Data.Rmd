@@ -35,13 +35,15 @@ library(pander)
 source(path(here::here('study_config.R')))
 source(path(here::here('R', 'check_date_sequence.R')))
 source(path(here::here('R', 'create_section.R')))
+source(path(here::here('R', 'pull_redcap_report.R')))
 ```
 
 
 ```{r, include = F}
-diary <- read.csv(path(path_to_data, diary_name), header = TRUE, sep = ",", na.strings = c("", "NA","."," ", "   ", "99"), stringsAsFactors = F)
-diary %<>% filter(record_id == subject)
+load('cur_sub.Rdata')
 
+diary <- pull_redcap_report(token_id, report_id) %>%
+          filter(record_id == record)
 ```
 
 ```{r, include = F}
