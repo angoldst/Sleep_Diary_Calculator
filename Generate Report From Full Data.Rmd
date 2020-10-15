@@ -70,6 +70,7 @@ diary$out_bed <- as.POSIXct(paste(diary$next_day, diary$sd_9), format="%Y-%m-%d 
          EMA = ifelse(is.na(sd_7b) & !is.na(sd_7a), 0, sd_7b),
          SOL = sd_4,
          WASO = sd_6,
+         sd_date = sd_date %>% as.character(),
          Session = factor(redcap_event_name %>% str_remove('_arm_2'), ordered = T, levels = session_order),
          Session_numeric = Session %>% as.character %>% str_replace('etx', '5') %>% str_replace('st', '6') %>% str_remove('t') %>% as.numeric) %>%
     filter(!is.na(redcap_repeat_instrument)) 
