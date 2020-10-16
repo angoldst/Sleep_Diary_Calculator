@@ -74,7 +74,7 @@ diary$out_bed <- as.POSIXct(paste(diary$next_day, diary$sd_9), format="%Y-%m-%d 
          SOL = sd_4,
          WASO = sd_6,
          sd_date = sd_date %>% as.character(),
-         Session = factor(redcap_event_name %>% str_remove('_arm_2'), ordered = T, levels = session_order),
+         Session = factor(redcap_event_name %>% str_remove('_arm_[0-9]'), ordered = T, levels = session_order),
          Session_numeric = session_numeric_dict[Session %>% as.character]) %>%
     filter(!is.na(redcap_repeat_instrument)) 
     
