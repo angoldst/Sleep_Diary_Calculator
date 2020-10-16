@@ -1,5 +1,5 @@
 # Sleep_Diary_Calculator
-Generates sleep report from redcap output (hopefully will add in API functionality)
+Generates sleep report from redcap output pulled from API
 
 Pre Conditions (should only need to do this once):
 - Need to set up a VPN on your computer for when not on Stanford's campus. This is a security issue. 
