@@ -42,6 +42,7 @@ source(path(here::here('R', 'pull_redcap_report.R')))
 ```{r, include = F}
 load('cur_sub.Rdata')
 
+#pull subject data from redcap and filter to current ID
 diary <- pull_redcap_report(token_id, report_id) %>%
           filter(record_id == record)
 ```
@@ -74,7 +75,7 @@ diary$out_bed <- as.POSIXct(paste(diary$next_day, diary$sd_9), format="%Y-%m-%d 
          WASO = sd_6,
          sd_date = sd_date %>% as.character(),
          Session = factor(redcap_event_name %>% str_remove('_arm_2'), ordered = T, levels = session_order),
-         Session_numeric = Session %>% as.character %>% str_replace('etx', '5') %>% str_replace('st', '6') %>% str_remove('t') %>% as.numeric) %>%
+         Session_numeric = session_numeric_dict[Session %>% as.character]) %>%
     filter(!is.na(redcap_repeat_instrument)) 
     
   
@@ -91,7 +92,7 @@ averages <- diary %>%
             WASO = mean(WASO, na.rm = T)) %>%
   mutate(sd_date = 'Average:', 
          record_id = '', 
-          Session_numeric = Session %>% as.character %>% str_replace('etx', '5') %>% str_replace('st', '6') %>% str_remove('t') %>% as.numeric, 
+          Session_numeric = session_numeric_dict[Session %>% as.character], 
          date_as_date = NA,
          )
 
@@ -104,7 +105,6 @@ daily_calcs %<>%
 
 ```{r, echo=F, results = 'asis'}
 #loop across sessions
-
 for(session in session_order){
       create_section(paste0('Sleep Diary for Calculation ', session, ':'))
   
@@ -149,7 +149,7 @@ melt(averages %>% select(-sd_date, -record_id, -SE, -TST, -TIB,-date_as_date), i
   facet_wrap(~variable) + 
   geom_point( ) + 
   geom_path() + 
-  scale_x_continuous(breaks = c(1:6), labels = c('T1', 'T2', 'T3', 'T4', 'ETX', '2MO'))
+  scale_x_continuous(breaks = c(1:6), labels = session_labels)
 
 
 melt(averages %>% select(-sd_date, -record_id, -EMA, -SOL, -WASO, -date_as_date), id.vars = c('Session', 'Session_numeric')) %>%
@@ -157,13 +157,13 @@ melt(averages %>% select(-sd_date, -record_id, -EMA, -SOL, -WASO, -date_as_date)
   facet_wrap(~variable, scales = 'free') + 
   geom_point( ) + 
   geom_path() + 
-  scale_x_continuous(breaks = c(1:6), labels = c('T1', 'T2', 'T3', 'T4', 'ETX', '2MO'))
+  scale_x_continuous(breaks = c(1:6), labels = session_labels)
 
 
 ```
 
 ```{r}
-print(system("git rev-parse HEAD", intern=TRUE))
+try(  print(system("git rev-parse HEAD", intern=TRUE)), silent = TRUE)
 
 ```
 
