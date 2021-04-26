@@ -149,7 +149,7 @@ melt(averages %>% select(-sd_date, -record_id, -SE, -TST, -TIB,-date_as_date), i
   facet_wrap(~variable) + 
   geom_point( ) + 
   geom_path() + 
-  scale_x_continuous(breaks = c(1:6), labels = session_labels)
+  scale_x_continuous(breaks = c(1:length(session_labels)), labels = session_labels)
 
 
 melt(averages %>% select(-sd_date, -record_id, -EMA, -SOL, -WASO, -date_as_date), id.vars = c('Session', 'Session_numeric')) %>%
@@ -157,7 +157,7 @@ melt(averages %>% select(-sd_date, -record_id, -EMA, -SOL, -WASO, -date_as_date)
   facet_wrap(~variable, scales = 'free') + 
   geom_point( ) + 
   geom_path() + 
-  scale_x_continuous(breaks = c(1:6), labels = session_labels)
+  scale_x_continuous(breaks = c(1:length(session_labels)), labels = session_labels)
 
 
 ```
