@@ -9,6 +9,7 @@ Pre Conditions (should only need to do this once):
 
 To run:
 - Open VPN connection
+- Make sure you opened all the files by opening the project ('Sleep_Diary_Calculator.Rproj') 
 - Edit subject_list.csv to only include the subjects you want to run the report for
 - Generate the report by running: `source('./run_report.R')
 
