@@ -1,6 +1,13 @@
 # Sleep_Diary_Calculator
 We collect daily sleep diary data that is used for monitoring changes across treatment via redcap. This R project generates sleep report from redcap output pulled directly from API. This is particularly useful for our CBT-I studies in which the recommended sleep time is perscribed based off of the prior week's diary data.  
 
+Setting up github folder: 
+-In main study folder create folder entitled "Sleep_Diary_Calculator_XXXX" where XXX is the study name
+-open terminal and cd into the newly created folder (e.g. cd ~/Box/CoPsyN Sleep Lab/TIRED/Sleep_Diary_Calculator/TIRED/)
+-clone github repository type: git clone https://github.com/angoldst/Sleep_Diary_Calculator.git
+-change directory into newly created folder "Sleep_Diary_Calculator"
+-Create new branch with study name type: git checkout -b XXX_study (again XXX is the study name)
+
 Pre Conditions (should only need to do this once):
 - May need to set up a VPN if done remotely from off-campus. This is a security issue with accessing redcap. 
 - Create a api token from redcap if you have not alread (this will likely take a day to process)
