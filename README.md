@@ -4,7 +4,7 @@ We collect daily sleep diary data that is used for monitoring changes across tre
 Pre Conditions (should only need to do this once):
 - May need to set up a VPN if done remotely from off-campus. This is a security issue with accessing redcap. 
 - Create a api token from redcap if you have not alread (this will likely take a day to process)
-- Once you have the api token, open the covid_token.R script add in your token and save in ~/redcap_tokens folder
+- Once you have the api token, open the luna_token.R script add in your token and save in ~/redcap_tokens folder
 - Make sure that all R packages needed are installed by running: `source('./R/needed_packages.R')`
 - Configure the `study_config_blank.R` file to match your study design
 
