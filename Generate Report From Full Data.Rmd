@@ -36,6 +36,7 @@ source(path(here::here('study_config.R')))
 source(path(here::here('R', 'check_date_sequence.R')))
 source(path(here::here('R', 'create_section.R')))
 source(path(here::here('R', 'pull_redcap_report.R')))
+variable_key <-read.csv(path(here::here('keys', 'LUNA_Covid_sleep_diary_variables.csv')))
 ```
 
 
@@ -45,6 +46,17 @@ load('cur_sub.Rdata')
 #pull subject data from redcap and filter to current ID
 diary <- pull_redcap_report(token_id, report_id) %>%
           filter(record_id == record)
+```
+
+
+```{r}
+#rename variables
+to_rename = variable_key %>% filter(luna_variable_name %in% colnames(diary) & covid_variable_name!='') %>% pull(luna_variable_name) %>% as.character()
+
+diary %<>% 
+  rename_at(vars(as.character(to_rename)), ~variable_key %>% filter(luna_variable_name %in% to_rename) %>% pull(covid_variable_name) %>% as.character())
+
+
 ```
 
 ```{r, include = F}
